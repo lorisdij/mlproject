@@ -49,3 +49,5 @@ if __name__=='__main__':
     #print(bias)
     print(z)
     print(a)
+
+#vid actuelle : https://www.youtube.com/watch?v=zFk76GtGf5E&ab_channel=ThibaultNeveu
