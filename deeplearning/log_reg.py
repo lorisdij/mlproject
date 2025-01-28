@@ -91,6 +91,17 @@ def train(features,targets,weights,bias,predictions):
     plt.scatter(features[:, 0], features[:, 1], s=40, c=targets, cmap=plt.cm.Spectral)
     plt.show()
 
+    for epoch in range (epochs):
+        if epoch%10==0:
+            predictions=activation(pre_activation(weights,bias,features))
+            print(f"Current cost = {cost(predictions,targets)}")
+        #init gradient
+        weights_gradients= np.zeros(weights.shape)
+        bias_gradient=0
+        #Go through each rows 
+        for feature ,target in zip(features,targets):
+            #compute prediction
+            z=pre_activation(feature,weights,bias)
 
 if __name__=='__main__':
     features, targets = dataset()
