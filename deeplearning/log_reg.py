@@ -1,114 +1,140 @@
-import numpy as np
 import matplotlib.pyplot as plt
+import numpy as np
 
 
-"""
-    Objectif : créer un algorithme capable de prédire qui est malade(1)/non-malade(0) à partir de données x1 x2 en ajustant le poids des coefficient à l'aide d'une descente du gradient
-"""
+def activation(z):
+    """
+        Activation/Sigmoid
+        **input: **
+            *z: (Integer|Numpy Array)
+    """
+    return 1 / (1 + np.exp(-z))
+
+
+def derivative_activation(z):
+    """
+        Derivative of the activation/Sigmoid
+        **input: **
+            *z: (Integer|Numpy Array)
+    """
+    return activation(z) * (1 - activation(z))
+
+
+def pre_activation(features, weights, bias):
+    """
+        Compute the pre activation
+        **input: **
+            *features: (Numpy Matrix)
+            *weights: (Numpy vector)
+            *bias: (Integer)
+    """
+    return np.dot(features, weights) + bias
+
 
 def init_variables():
-    '''
-        génerer des poids de coefs de base aléatoires ainsi qu'un biai nul    
-    '''
-    bias=0
-    weights=np.random.randn(2)
-    print('--weights--')
-    print(weights)
+    """
+        Init model variables (weights and bias)
+    """
+    weights = np.random.normal(size=2)
+    bias = 0
 
-    return bias, weights
+    return weights, bias
 
-def dataset():
-    '''
-        generate dataset : taux de protéine et glucides dans l'alimentation
-    '''
-    ligne_par_class=10
-    healthy=np.random.randn(ligne_par_class,2)+[3,3]
-    sick=np.random.randn(ligne_par_class,2)
-    features=np.vstack([healthy,sick])
 
-    targets=np.concatenate((np.zeros(ligne_par_class),np.zeros(ligne_par_class)+1))
-    print('--features--')
-    print(features)
-    print('--targets--')
-    print(targets)
+def predict(features, weights, bias):
+    """
+        Predict the class
+        **input: **
+            *features: (Numpy Matrix)
+            *weights: (Numpy vector)
+            *bias: (Integer)
+        **reutrn: (Numpy vector)**
+            *0 or 1
+    """
+    z = pre_activation(features, weights, bias)
+    y = activation(z)
+    return np.round(y)
+
+
+def get_dataset():
+    """
+        Method used to generate the dataset
+    """
+    # Numbers of row per class
+    row_per_class = 100
+    # Generate rows
+    sick = np.random.randn(row_per_class, 2) + np.array([-2, -2])
+    healthy = np.random.randn(row_per_class, 2) + np.array([2, 2])
+
+    features = np.vstack([sick, healthy])
+    targets = np.concatenate((np.zeros(row_per_class), np.zeros(row_per_class) + 1))
 
     return features, targets
 
-def pre_activation(features,weights,bias):
-    '''
-        effectue la pré-activation : calcul de la sortie en fonction des features et de leur weights associés + biai
-    '''
-    z=np.dot(features,weights) + bias
-    print('--pre-activation--')
-    print(z)
-    return z
-
-def activation(z):
-    '''
-        On applique la fonction logarithmique sur le résultat de la pré-activation
-    '''
-    y=1/(1+np.exp(-z))
-    print('--y--')
-    print(y)
-    return y
-
-def derivate_activation(z):
-    '''
-        deriver l'activation (sigmoid)
-    '''
-    derivate_activation=activation(z) * (1 - activation(z))
-    print('--derivate_activation--')
-    print(derivate_activation)
-
-
-def predict(y):
-    '''
-        On obtient en sortie ce qui est prédit donc 0 : non-malade ou 1 : malade (en arrondissant la resultat de la fonction d'activation)
-    '''
-    prediction=np.round(y)
-    print('--prediction--')
-    print(prediction)
-    return prediction
-
 
 def cost(predictions, targets):
-    '''
-        calcul des erreurs pour pouvoir ajuster le poids des modèles
-    '''
-    cost=np.mean((predictions-targets)**2)
-    print('--cost--')
-    print(cost)
+    """
+        Compute the cost of the model
+        **input: **
+            *predictions: (Numpy vector) y
+            *targets: (Numpy vector) t
+    """
+    return np.mean((predictions - targets) ** 2)
 
 
-def train(features,targets,weights,bias,predictions):
-    '''
-        entraînement pour adapter les weights et les bias
-    '''
-    epochs=150
-    learning_rate=0.1
+def train(features, targets, weights, bias):
+    """
+        Method used to train the model using the gradient descent method
+        **input: **
+            *features: (Numpy Matrix)
+            *targets: (Numpy vector)
+            *weights: (Numpy vector)
+            *bias: (Integer)
+        **return (Numpy vector, Numpy vector) **
+            *update weights
+            *update bias
+    """
+    epochs = 1000
+    learning_rate = 0.01
 
-    print(f'Accuracy = {np.mean(predictions==targets)}')
-    plt.scatter(features[:, 0], features[:, 1], s=40, c=targets, cmap=plt.cm.Spectral)
-    plt.show()
+    # Print current Accuracy
+    predictions = predict(features, weights, bias)
+    print("Accuracy = %s" % np.mean(predictions == targets))
 
-    for epoch in range (epochs):
-        if epoch%10==0:
-            predictions=activation(pre_activation(weights,bias,features))
-            print(f"Current cost = {cost(predictions,targets)}")
-        #init gradient
-        weights_gradients= np.zeros(weights.shape)
-        bias_gradient=0
-        #Go through each rows 
-        for feature ,target in zip(features,targets):
-            #compute prediction
-            z=pre_activation(feature,weights,bias)
+    # Plot points
+    #plt.scatter(features[:, 0], features[:, 1], s=40, c=targets, cmap=plt.cm.Spectral)
+    #plt.show()
 
-if __name__=='__main__':
-    features, targets = dataset()
-    bias, weights = init_variables()
-    z=pre_activation(features,weights,bias)
-    y=activation(z)
-    predictions=predict(y)
-    derivate_activation(z)
-    cost(predictions,targets)
-    train(features,targets,weights,bias,predictions)
+    for epoch in range(epochs):
+        # Compute and display the cost every 10 epoch
+        if epoch % 10 == 0:
+            predictions = activation(pre_activation(features, weights, bias))
+            print("Current cost = %s" % cost(predictions, targets))
+        # Init gragients
+        weights_gradients = np.zeros(weights.shape)
+        bias_gradient = 0.
+        # Go through each row
+        for feature, target in zip(features, targets):
+            # Compute prediction
+            z = pre_activation(feature, weights, bias)
+            y = activation(z)
+            # Update gradients
+            weights_gradients += (y - target) * derivative_activation(z) * feature
+            bias_gradient += (y - target) * derivative_activation(z)
+        # Update variables
+        weights = weights - (learning_rate * weights_gradients)
+        bias = bias - (learning_rate * bias_gradient)
+    # Print current Accuracy
+    predictions = predict(features, weights, bias)
+    print("Accuracy = %s" % np.mean(predictions == targets))
+    print(f"weights={weights}")
+    print(f"bias={bias}")
+
+
+if __name__ == '__main__':
+    # Dataset
+    features, targets = get_dataset()
+    # Variables
+    weights, bias = init_variables()
+    # Train the model
+    train(features, targets, weights, bias)
